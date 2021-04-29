@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState, useCallback } from "react";
 import { deleteStageRace, getStageRaces } from "../api";
-import { IStage, IStageRace } from "../types";
+import { IStageRace } from "../types";
+import AddStageRaceModal from "./AddStageRaceModal";
 import {
   Container,
   ErrorOverlay,
@@ -9,15 +10,12 @@ import {
   StageRaceListGroup,
   StageRaceListGroupItem,
 } from "./shared";
-
-interface Error {
-  show: boolean;
-  message: string;
-}
+import { Error, getDuration } from "./utils";
 
 const App = () => {
   const [stageRaces, setStageRaces] = useState<IStageRace[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showAddRace, setShowAddRace] = useState<boolean>(false);
   const [error, setError] = useState<Error>({ show: false, message: "" });
   const sortStageRaces = (stageRaces: IStageRace[]) => {
     return stageRaces.sort((a: IStageRace, b: IStageRace) => {
@@ -27,22 +25,6 @@ const App = () => {
         ? 1
         : 0;
     });
-  };
-  const sortStages = (stages: IStage[]) => {
-    return stages.sort((a: IStage, b: IStage) => {
-      return new Date(a.date) < new Date(b.date)
-        ? -1
-        : new Date(a.date) < new Date(b.date)
-        ? 1
-        : 0;
-    });
-  };
-  const getDuration = (stages: IStage[]) => {
-    const sortedStages = sortStages(stages);
-    const newestDate = new Date(sortedStages[stages.length - 1].date);
-    const oldestDate = new Date(sortedStages[0].date);
-    const diffTime = Math.abs(newestDate.getTime() - oldestDate.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   };
 
   const fetchStageRaces = useCallback(async () => {
@@ -61,7 +43,7 @@ const App = () => {
   const deleteItem = async (id: number) => {
     try {
       await deleteStageRace(id);
-      fetchStageRaces()
+      fetchStageRaces();
     } catch (error) {
       setError({ show: true, message: "Error deleting stage race" });
     }
@@ -80,29 +62,34 @@ const App = () => {
         />
       )}
       <h1 className="mb-3">Stage Races</h1>
+      <AddStageRaceModal
+        showAddRace={showAddRace}
+        setStageRaces={setStageRaces}
+        setShowAddRace={setShowAddRace}
+        setError={setError}
+      />
       {isLoading ? (
         <LoadingSpinner />
       ) : (
         <Fragment>
-          <StageRaceListGroup>
+          <StageRaceListGroup data-testid="mmm">
             {stageRaces.map((stageRace) => {
-              const duration = getDuration(stageRace?.stages ?? []);
               return (
                 <StageRaceListGroupItem
                   key={stageRace.id}
                   id={stageRace.id}
                   name={stageRace.name}
                   date={stageRace?.stages[0].date}
-                  duration={
-                    duration > 1 ? `${duration} days` : `${duration} day`
-                  }
+                  duration={getDuration(stageRace?.stages ?? [])}
                   onDelete={() => deleteItem(stageRace.id)}
                 />
               );
             })}
           </StageRaceListGroup>
           {!stageRaces.length && <p>No stage races</p>}
-          <PrimaryButton>Add Stage Race</PrimaryButton>
+          <PrimaryButton onClick={() => setShowAddRace(true)}>
+            Add Stage Race
+          </PrimaryButton>
         </Fragment>
       )}
     </Container>

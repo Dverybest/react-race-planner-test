@@ -19,9 +19,11 @@ const App = () => {
   const [error, setError] = useState<Error>({ show: false, message: "" });
   const sortStageRaces = (stageRaces: IStageRace[]) => {
     return stageRaces.sort((a: IStageRace, b: IStageRace) => {
-      return a.stages[0].date < b.stages[0].date
+      return new Date(a.stages[0].date).getTime() <
+        new Date(b.stages[0].date).getTime()
         ? -1
-        : a.stages[0].date < b.stages[0].date
+        : new Date(a.stages[0].date).getTime() <
+          new Date(b.stages[0].date).getTime()
         ? 1
         : 0;
     });

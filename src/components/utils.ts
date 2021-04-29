@@ -5,9 +5,9 @@ export interface Error {
 }
 export const sortStages = (stages: IStage[]) => {
     return stages.sort((a: IStage, b: IStage) => {
-        return new Date(a.date) < new Date(b.date)
+        return new Date(a.date).getTime() < new Date(b.date).getTime()
             ? -1
-            : new Date(a.date) < new Date(b.date)
+            : new Date(a.date).getTime() < new Date(b.date).getTime()
                 ? 1
                 : 0;
     });

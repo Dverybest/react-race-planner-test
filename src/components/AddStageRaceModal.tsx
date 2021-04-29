@@ -1,6 +1,5 @@
 import { Fragment, useState, Dispatch, SetStateAction } from "react";
 import { addStageRace } from "../api";
-import uniqid from "uniqid";
 import { IProvisionalStageRace, IStage, IStageRace } from "../types";
 import AddStage from "./AddStage";
 import {

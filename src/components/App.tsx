@@ -1,5 +1,5 @@
-import { Fragment, useEffect, useState } from "react";
-import { getStageRaces } from "../api";
+import { Fragment, useEffect, useState, useCallback } from "react";
+import { deleteStageRace, getStageRaces } from "../api";
 import { IStage, IStageRace } from "../types";
 import {
   Container,
@@ -41,10 +41,11 @@ const App = () => {
     const sortedStages = sortStages(stages);
     const newestDate = new Date(sortedStages[stages.length - 1].date);
     const oldestDate = new Date(sortedStages[0].date);
-    const diffTime = Math.abs(newestDate.getTime()  - oldestDate.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+    const diffTime = Math.abs(newestDate.getTime() - oldestDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   };
-  const fetchStageRaces = async () => {
+
+  const fetchStageRaces = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await getStageRaces();
@@ -55,10 +56,20 @@ const App = () => {
       setError({ show: true, message: "Error loading stage races" });
       setIsLoading(false);
     }
+  }, []);
+
+  const deleteItem = async (id: number) => {
+    try {
+      await deleteStageRace(id);
+      fetchStageRaces()
+    } catch (error) {
+      setError({ show: true, message: "Error deleting stage race" });
+    }
   };
+
   useEffect(() => {
     fetchStageRaces();
-  }, []);
+  }, [fetchStageRaces]);
 
   return (
     <Container>
@@ -75,15 +86,17 @@ const App = () => {
         <Fragment>
           <StageRaceListGroup>
             {stageRaces.map((stageRace) => {
-              const duration = getDuration(stageRace?.stages??[]);
+              const duration = getDuration(stageRace?.stages ?? []);
               return (
                 <StageRaceListGroupItem
                   key={stageRace.id}
                   id={stageRace.id}
                   name={stageRace.name}
                   date={stageRace?.stages[0].date}
-                  duration={duration>1?`${duration} days`:`${duration} day`}
-                  onDelete={() => {}}
+                  duration={
+                    duration > 1 ? `${duration} days` : `${duration} day`
+                  }
+                  onDelete={() => deleteItem(stageRace.id)}
                 />
               );
             })}
